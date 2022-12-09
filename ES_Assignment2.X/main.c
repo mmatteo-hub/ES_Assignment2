@@ -1,9 +1,3 @@
-/*
- * File:   main.c
- * Authors: Carlone Matteo, Maragliano Matteo, Musumeci Mattia, Sani Ettore
- *
- * Created on 27 settembre 2022, 11.16
- */
 
 // DSPIC30F4011 Configuration Bit Settings
 
@@ -39,42 +33,26 @@
 // Use project enums instead of #define for ON and OFF.
 
 #include <xc.h>
-
-#define TIMER_FOR_BUTTON_S5 3
-#define TIMER_FOR_BUTTON_S6 4
-
+#include "parser.h"
 #include "my_timer_lib.h"
 #include "my_print_lib.h"
 #include "my_circular_buffer_lib.h"
 #include "my_btn_lib.h"
 #include <stdio.h>
 
-void exercise1() {
-    PTCONbits.PTMOD = 0;     // free running mode
-    PTCONbits.PTCKPS = 0b0;  // prescaler
-    PWMCON1bits.PEN2H = 1;   // output high bit
-    PWMCON1bits.PEN2L = 1;   // output low bit
-    PTPER = 1842;            // time period
-    PDC2 = PTPER;            // duty cycle
-    PTCONbits.PTEN = 1;      // enable the PWM
-    while(1);
-}
-
-void exercise2() {
-    PTCONbits.PTMOD = 0;     // free running mode
-    PTCONbits.PTCKPS = 0b0;  // prescaler
-    PWMCON1bits.PEN2H = 1;   // output high bit
-    PWMCON1bits.PEN2L = 1;   // output low bit
-    PTPER = 1842;            // time period
-    PDC2 = PTPER;            // duty cycle
-    DTCON1bits.DTAPS = 0b10;    // dead time prescaler
-    DTCON1bits.DTA = 18;     // dead time
-    PTCONbits.PTEN = 1;      // enable the PWM
-    while(1);
-}
-
-int main(void)
-{
-    // exercise1();
-    exercise2();
+int main(void) {
+    // parser initialization
+    parser_state pstate;
+	pstate.state = STATE_DOLLAR;
+	pstate.index_type = 0; 
+	pstate.index_payload = 0;
+    
+    
+    // main loop
+    while (1) {
+        
+        
+    }
+    
+    return 0;
 }
