@@ -21,6 +21,7 @@
       <itemPath>my_circular_buffer_lib.h</itemPath>
       <itemPath>my_btn_lib.h</itemPath>
       <itemPath>parser.c</itemPath>
+      <itemPath>parser.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"
@@ -39,7 +40,7 @@
         <targetDevice>dsPIC30F4011</targetDevice>
         <targetHeader></targetHeader>
         <targetPluginBoard></targetPluginBoard>
-        <platformTool>noID</platformTool>
+        <platformTool>PICkit3PlatformTool</platformTool>
         <languageToolchain>XC16</languageToolchain>
         <languageToolchainVersion>2.00</languageToolchainVersion>
         <platform>3</platform>

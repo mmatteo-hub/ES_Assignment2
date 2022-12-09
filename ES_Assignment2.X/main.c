@@ -40,6 +40,42 @@
 #include "my_btn_lib.h"
 #include <stdio.h>
 
+#define TASK_COUNT 3
+
+typedef struct
+{
+    int n;  // number of periods elapsed from last task call
+    int N;  // after how many periods should the task be called
+    void (*task)(void);  // the task
+} Heartbeat;
+
+Heartbeat schedInfo[TASK_COUNT];
+
+void control_task(){
+    // main control step, 200Hz
+    
+}
+
+void feedback_task(){
+    // send temp and current feedback to UART receiver, 1Hz
+}
+
+void blink_task(){
+    // toggle led D3, 1Hz
+     LATBbits.LATB0 = !LATBbits.LATB0; // toggle led
+}
+
+void scheduler()
+{
+    for(int i=0; i<TASK_COUNT; ++i)
+    {
+        if(++schedInfo[i].n < schedInfo[i].N)
+            continue;
+        schedInfo[i].task();
+        schedInfo[i].n = 0;
+    }
+}
+
 int main(void) {
     // parser initialization
     parser_state pstate;
@@ -47,11 +83,17 @@ int main(void) {
 	pstate.index_type = 0; 
 	pstate.index_payload = 0;
     
+    TRISBbits.TRISB0 = 0; // set the pin as output, led D3
+
+    tmr_setup_period(TIMER1, 5); // initialize heatbeat timer
+    schedInfo[0] = (Heartbeat){0, 1, control_task}; // task 1 runs every heartbeat
+    schedInfo[1] = (Heartbeat){0, 200, feedback_task}; // task 2 runs every 50 heartbeat
+    schedInfo[2] = (Heartbeat){0, 200, blink_task}; // task 3 runs every 100 heartbeat
     
     // main loop
     while (1) {
-        
-        
+        scheduler();
+        tmr_wait_period(TIMER1);
     }
     
     return 0;
