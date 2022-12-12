@@ -7,7 +7,7 @@
 #define NEW_MESSAGE (1) // new message received and parsed completely
 #define NO_MESSAGE (0) // no new messages
 
-typedef struct { 
+typedef struct {
 	int state;
 	char msg_type[6]; // type is 5 chars + string terminator
 	char msg_payload[100];  // assume payload cannot be longer than 100 chars
@@ -16,6 +16,7 @@ typedef struct {
 } parser_state;
 
 int parse_byte(parser_state* ps, char byte);
+int extract_integer(const char* str);
 
 #endif	/* PARSER_H */
 

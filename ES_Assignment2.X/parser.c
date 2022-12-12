@@ -42,3 +42,22 @@ int parse_byte(parser_state* ps, char byte) {
     }
     return NO_MESSAGE;
 }
+
+int extract_integer(const char* str) {
+    int i = 0, number = 0, sign = 1;
+    if (str[i] == '-') {
+        sign = -1;
+        i++;
+    }
+    else if (str[i] == '+') {
+        sign = 1;
+        i++;
+    }
+    while (str[i] != ',' && str[i] != '\0') {
+        number *= 10; // multiply the current number by 10;
+        number += str[i] - '0'; // converting character to decimal number
+        i++;
+    }
+    return sign*number;
+}
+

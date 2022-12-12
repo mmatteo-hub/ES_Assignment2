@@ -39,8 +39,13 @@
 #include "my_circular_buffer_lib.h"
 #include "my_btn_lib.h"
 #include <stdio.h>
+#include <string.h>
 
 #define TASK_COUNT 3
+
+volatile circular_buffer in_buffer;
+volatile circular_buffer out_buffer;
+parser_state pstate;
 
 typedef struct
 {
@@ -49,11 +54,102 @@ typedef struct
     void (*task)(void);  // the task
 } Heartbeat;
 
+typedef struct{
+    int rpm;
+} mcref_data;
+
+typedef struct{
+    float current;
+    float temp;
+} mcfbk_data;
+
 Heartbeat schedInfo[TASK_COUNT];
+
+// Handles the reading of the UART periferal and related errors
+void handleUARTReading()
+{
+    // Check if there is something to read from UART
+    while(U2STAbits.URXDA == 1)
+        // Put the data in the circular buffer
+        if(cb_push_back(&in_buffer, U2RXREG) == -1){
+            // Wait for a possible ongoing transmission
+            while (SPI1STATbits.SPITBF == 1);
+            // Write on the LCD
+            SPI1BUF = '1';
+        }
+}
+
+// This is triggered when the UART buffer is 3/4 full
+void __attribute__((__interrupt__, __auto_psv__)) _U2RXInterrupt()
+{
+    // Reset the interrupt flag
+    IFS1bits.U2RXIF = 0;
+    // Handle the reading of the buffer
+    handleUARTReading();
+}
+
+// Handle the overflow of the UART
+void handleUARTOverflow()
+{
+    // Overflow did not occur, do nothing
+    if(U2STAbits.OERR == 0)
+        return;
+    
+    // Wait for a possible ongoing transmission
+    while (SPI1STATbits.SPITBF == 1);
+    // Write on the LCD
+    SPI1BUF = '2';
+    // Clear the UART buffer by storing all the available data
+    handleUARTReading();
+    // Clear the UART overflow flag
+    U2STAbits.OERR = 0;
+}
+
+void parse_input(const char* msg, mcref_data* sdata){
+    sdata->rpm = extract_integer(msg);
+}
+
+void parse_output(){
+    
+}
 
 void control_task(){
     // main control step, 200Hz
     
+    ADCON1bits.SAMP = 1; // start sampling current
+    
+    // Temporarely disable the UART interrupt to read data
+    // This does not cause problems if data arrives now since we are empting the buffer
+    IEC1bits.U2RXIE = 0;
+    // Handle the reading of the buffer
+    handleUARTReading();
+    // Enable UART interrupt again
+    IEC1bits.U2RXIE = 1;
+
+    // Check if there was an overflow in the UART buffer
+    handleUARTOverflow();
+    
+    mcref_data in_sdata;
+    
+    char word;
+    while (in_buffer.count != 0){
+        cb_pop_front(&in_buffer, &word);
+        int ret = parse_byte(&pstate, word);
+        if (ret == NEW_MESSAGE){
+            if (strcmp(pstate.msg_type, "MCREF") == 0){
+                parse_input(pstate.msg_payload, &in_sdata);
+                float multiplier = 0.002 * in_sdata.rpm;
+                PDC2 = multiplier*PTPER;
+            }
+        }
+    }
+    while (!ADCON1bits.DONE); // wait for the end of the conversion
+    int bits = ADCBUF0;
+    float amp = 0.0488759*bits - 30;
+    if (amp > 15)
+        LATBbits.LATB1 = 1;
+    else
+        LATBbits.LATB1 = 0;
 }
 
 void feedback_task(){
@@ -78,23 +174,46 @@ void scheduler()
 
 int main(void) {
     // parser initialization
-    parser_state pstate;
 	pstate.state = STATE_DOLLAR;
 	pstate.index_type = 0; 
 	pstate.index_payload = 0;
     
     TRISBbits.TRISB0 = 0; // set the pin as output, led D3
+    TRISBbits.TRISB1 = 0; // set the pin as output, led D4
 
-    tmr_setup_period(TIMER1, 5); // initialize heatbeat timer
     schedInfo[0] = (Heartbeat){0, 1, control_task}; // task 1 runs every heartbeat
     schedInfo[1] = (Heartbeat){0, 200, feedback_task}; // task 2 runs every 50 heartbeat
     schedInfo[2] = (Heartbeat){0, 200, blink_task}; // task 3 runs every 100 heartbeat
+    
+    cb_init(&in_buffer);              // init the circular buffer structure
+    cb_init(&out_buffer);              // init the circular buffer structure
+    init_uart();                   // init the UART
+    init_spi();                    // init the SPI
+    tmr_wait_ms(TIMER1, 1500);     // wait 1.5s to start the SPI correctly
+    tmr_setup_period(TIMER1, 5); // initialize heatbeat timer
+    
+    PTCONbits.PTMOD = 0;     // free running mode
+    PTCONbits.PTCKPS = 0b0;  // prescaler
+    PWMCON1bits.PEN2H = 1;   // output high bit
+    PWMCON1bits.PEN2L = 1;   // output low bit
+    PTPER = 1842;            // time period
+    PDC2 = 0*PTPER;            // duty cycle
+    PTCONbits.PTEN = 1;      // enable the PWM
+
+    ADCON3bits.ADCS = 8; // Tad = 4.5 Tcy
+    // sampling mode: manual sampling, automatic conversion
+    ADCON1bits.ASAM = 0; // start
+    ADCON1bits.SSRC = 7; // end
+    ADCON3bits.SAMC = 16; // auto sampling time
+    ADCON2bits.CHPS = 0; // selecting the channel to convert
+    ADCHSbits.CH0SA = 0b0010; // chose the positive input of the channels
+    ADPCFG = 0xfffb;     // select the AN2 pin as analogue
+    ADCON1bits.ADON = 1; // turn the ADC on
     
     // main loop
     while (1) {
         scheduler();
         tmr_wait_period(TIMER1);
     }
-    
     return 0;
 }
