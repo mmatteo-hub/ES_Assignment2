@@ -26,8 +26,10 @@ void init_uart()
     U2BRG = 11;               // (7372800 / 4) / (16 * 9600)
     U2MODEbits.UARTEN = 1;    // enable UART 
     U2STAbits.UTXEN = 1;      // enable U1TX (must be after UARTEN)
-    U2STAbits.URXISEL = 0b10; // set interrupt when buffer is 3/4 full
+    U2STAbits.URXISEL = 0b10; // set the receiver interrupt when buffer is 3/4 full
+    U2STAbits.UTXISEL = 1;    // set the transmitter interrupt when buffer is empty
     IEC1bits.U2RXIE = 1;      // enable UART receiver interrupt
+    IEC1bits.U2TXIE = 1;      // enable UART transmitter interrupt
 }
 
 void lcd_clear(short start, short amount)
