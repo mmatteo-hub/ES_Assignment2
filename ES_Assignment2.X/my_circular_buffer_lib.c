@@ -36,6 +36,27 @@ int cb_push_back(volatile circular_buffer *cb, char item)
     return 0;
 }
 
+int cb_push_back_string(volatile circular_buffer *cb, char* string)
+{
+    // Computing the length of the string
+    int length = 0;
+    while(string[length++] != '\0');
+    --length;
+    
+    if(length > SIZE-(cb->count))
+        return -1;  // Not enough space for the string
+    
+    // Inserting the whole string
+    for(int i=0; i<length; ++i)
+    {
+        cb->container[cb->head] = string[i];
+        cb->head = (cb->head+1) % SIZE;
+    }
+    cb->count += length;
+    
+    return 0;
+}
+
 int cb_pop_front(volatile circular_buffer *cb, char* item)
 {
     // Read an element from the circular buffer

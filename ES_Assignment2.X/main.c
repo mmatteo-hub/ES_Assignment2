@@ -43,9 +43,8 @@
 
 #define TASK_COUNT 3
 
-volatile circular_buffer in_buffer;
-volatile circular_buffer out_buffer;
-parser_state pstate;
+void handleUARTReading();
+void handleUARTWriting();
 
 typedef struct
 {
@@ -64,32 +63,16 @@ typedef struct{
     int n;
 } mcfbk_data;
 
+// The buffer that will contain data received from the UART
+volatile circular_buffer in_buffer;
+// The buffer that will contain data to send to the UART
+volatile circular_buffer out_buffer;
+
+parser_state pstate;
+
 Heartbeat schedInfo[TASK_COUNT];
 mcfbk_data out_sdata = {0};
 
-// Handles the reading of the UART periferal and related errors
-void handleUARTReading()
-{
-    // Check if there is something to read from UART
-    while(U2STAbits.URXDA == 1)
-        // Put the data in the circular buffer
-        if(cb_push_back(&in_buffer, U2RXREG) == -1){
-            // Wait for a possible ongoing transmission
-            while (SPI1STATbits.SPITBF == 1);
-            // Write on the LCD
-            SPI1BUF = '1';
-        }
-}
-
-void handleUARTWriting()
-{
-    char word;
-    // until the UART buffer is not full, and there is something in the output buffer
-    while (U2STAbits.UTXBF == 0 && out_buffer.count != 0){
-        cb_pop_front(&out_buffer, &word);
-        U2TXREG = word;
-    }
-}
 
 // This is triggered when the receiver UART buffer is 3/4 full
 void __attribute__((__interrupt__, __auto_psv__)) _U2RXInterrupt()
@@ -100,47 +83,72 @@ void __attribute__((__interrupt__, __auto_psv__)) _U2RXInterrupt()
     handleUARTReading();
 }
 
+void handleUARTReading()
+{
+    // Check if there is something to read from UART
+    while(U2STAbits.URXDA == 1)
+        // Put the data in the circular buffer
+        if(cb_push_back(&in_buffer, U2RXREG) == -1){
+            // Waiting for the current LCD transmittion to end and
+            // then writing 1 on the LDC for debugging
+            while (SPI1STATbits.SPITBF == 1);
+            SPI1BUF = '1';
+        }
+}
+
 // This is triggered when the transmitter UART buffer becomes empty
 void __attribute__((__interrupt__, __auto_psv__)) _U2TXInterrupt()
 {
     // Reset the interrupt flag
     IFS1bits.U2TXIF = 0;
-    // Handle the reading of the buffer
+    // Handle the writing on the buffer
     handleUARTWriting();
 }
 
-// Handle the overflow of the UART
+void handleUARTWriting()
+{
+    char word;
+    // Trasmit data if the UART transmission buffer is not full and 
+    // there is actually something to transmit in the output buffer
+    while (U2STAbits.UTXBF == 0 && out_buffer.count != 0){
+        cb_pop_front(&out_buffer, &word);
+        U2TXREG = word;
+    }
+}
+
 void handleUARTOverflow()
 {
     // Overflow did not occur, do nothing
     if(U2STAbits.OERR == 0)
         return;
     
-    // Wait for a possible ongoing transmission
+    // Waiting for the current LCD transmittion to end and
+    // then writing 2 on the LDC for debugging
     while (SPI1STATbits.SPITBF == 1);
-    // Write on the LCD
     SPI1BUF = '2';
-    // Clear the UART buffer by storing all the available data
+    // Handle the UART overflow by storing all the available data
     handleUARTReading();
     // Clear the UART overflow flag
     U2STAbits.OERR = 0;
 }
 
-void parse_input(const char* msg, mcref_data* sdata){
+void parse_input(const char* msg, mcref_data* sdata)
+{
     sdata->rpm = extract_integer(msg);
 }
 
-void parse_output(char* msg, mcfbk_data* sdata){
+void parse_output(char* msg, mcfbk_data* sdata)
+{
     float amp = sdata->amp / sdata->n;
     float temp = sdata->temp / sdata->n;
     sprintf(msg,"$MCFBK,%f,%f*", amp,temp);
 }
 
-void control_task(){
-    // Main control step, 200Hz
+// This should be called at 200Hz rate
+void control_task()
+{
     mcref_data in_sdata;
     char word;
-    int bits;
     // Start sampling
     ADCON1bits.SAMP = 1;
     // Temporarely disable the UART interrupt to read data
@@ -152,48 +160,73 @@ void control_task(){
     IEC1bits.U2RXIE = 1;
     // Check if there was an overflow in the UART buffer
     handleUARTOverflow();
-    while (in_buffer.count != 0){                           // until the input buffer is not full
-        cb_pop_front(&in_buffer, &word);                    // read the first character of the buffer
-        int ret = parse_byte(&pstate, word);                // parse the character
-        if (ret == NEW_MESSAGE){                            // if the parsing returns that the message is complete
-            if (strcmp(pstate.msg_type, "MCREF") == 0){     // compare the type of the message with the desired one
-                parse_input(pstate.msg_payload, &in_sdata); // extract the data from the payload
-                float multiplier = 0.002 * in_sdata.rpm;    // compute the multiplier for the duty cycle (1000rpm => 5V => 2)
-                PDC2 = multiplier*PTPER;
-            }
+
+    // Handling all the data in the input buffer
+    while (in_buffer.count != 0){
+        cb_pop_front(&in_buffer, &word);
+        // Check if there is a new message to handle
+        if(parse_byte(&pstate, word) != NEW_MESSAGE)
+            continue;
+
+        // Handling message type
+        if (strcmp(pstate.msg_type, "MCREF") == 0)
+        {
+            parse_input(pstate.msg_payload, &in_sdata);
+            float multiplier = 0.002 * in_sdata.rpm;
+            PDC2 = multiplier*PTPER;
+        }
+        else
+        {
+            // Waiting for the current LCD transmittion to end and
+            // then writing 3 on the LDC for debugging
+            while (SPI1STATbits.SPITBF == 1);
+            SPI1BUF = '4';
         }
     }
-    while (!ADCON1bits.DONE);        // wait for the end of the ADC conversion
-    bits = ADCBUF0;                  // read the converted value of the potentiometer
-    float amp = 0.0488759*bits - 30; // compute the simulated analogue current
-    if (amp > 15)                    // if the current exceeds 15A
-        LATBbits.LATB1 = 1;          // turn on the led D4
-    else
-        LATBbits.LATB1 = 0;          // turn off the led D4
+
+    // Waiting for the ADC conversion to be completed before reading data
+    while (!ADCON1bits.DONE);
+
+    // Parsing the current value from the potentiometer AN2
+    float amp = 0.0488759*ADCBUF0 - 30;
     out_sdata.amp += amp;
-    bits = ADCBUF1;
-    out_sdata.temp += bits * 0.48828125 - 50;
+    // Parsing the temperature from the sensor AN3
+    out_sdata.temp += ADCBUF1 * 0.48828125 - 50;
+    // Increasing the number of samples
     out_sdata.n++;
+
+    // Turning the led D4 only if the current is over 15A
+    LATBbits.LATB1 = (amp > 15) ? 1 : 0;
 }
 
-void feedback_task(){
-    // send temp and current feedback to UART receiver, 1Hz
+// This should be called at 1Hz rate
+void feedback_task()
+{
+    // Parsing the received data into the UART message
     char out[30];
-    int i = 0;
     parse_output(out, &out_sdata);
+    // Resetting the received data
     out_sdata = (mcfbk_data){0};
-    while (out[i] != '\0'){
-        cb_push_back(&out_buffer, out[i]);
-        i++;
+
+    if(cb_push_back_string(&out_buffer, out) == -1)
+    {
+        // Waiting for the current LCD transmittion to end and
+        // then writing 3 on the LDC for debugging
+        while (SPI1STATbits.SPITBF == 1);
+        SPI1BUF = '3';
+        return;
     }
+
     IEC1bits.U2TXIE = 0;
     handleUARTWriting();
     IEC1bits.U2TXIE = 1;
 }
 
-void blink_task(){
-    // toggle led D3, 1Hz
-     LATBbits.LATB0 = !LATBbits.LATB0; // toggle led D3
+// This should be called at 1Hz rate
+void blink_task()
+{
+    // The led D3 is toggled at 1Hz rate
+     LATBbits.LATB0 = !LATBbits.LATB0;
 }
 
 void scheduler()
@@ -251,5 +284,6 @@ int main(void) {
         scheduler();
         tmr_wait_period(TIMER1);
     }
+
     return 0;
 }
