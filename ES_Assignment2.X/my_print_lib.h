@@ -41,5 +41,6 @@ void lcd_write(short start, char chars[]);
 void lcd_move_cursor(short position);
 void uart_write(char chars[]);
 void charcounter_to_str(volatile unsigned int counter, volatile short int is_overflow, char str[]);
+char* float_to_string(float x, char *p, short decimals);
 
 #endif
