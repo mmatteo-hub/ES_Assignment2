@@ -19,7 +19,7 @@ endif
 endif
 
 # Environment
-MKDIR=mkdir -p
+MKDIR=gnumkdir -p
 RM=rm -f 
 MV=mv 
 CP=cp 
@@ -42,6 +42,12 @@ ifeq ($(COMPARE_BUILD), true)
 COMPARISON_BUILD=-mafrlcsj
 else
 COMPARISON_BUILD=
+endif
+
+ifdef SUB_IMAGE_ADDRESS
+SUB_IMAGE_ADDRESS_COMMAND=--image-address $(SUB_IMAGE_ADDRESS)
+else
+SUB_IMAGE_ADDRESS_COMMAND=
 endif
 
 # Object Directory
@@ -89,62 +95,62 @@ MP_LINKER_FILE_OPTION=,--script=p30F4011.gld
 # ------------------------------------------------------------------------------------
 # Rules for buildStep: compile
 ifeq ($(TYPE_IMAGE), DEBUG_RUN)
-${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/8efd1c888b7cb72a91eaf5f56754e4ca2a8c5cbe .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/c8aca7f654da2b5d36f5b1e05ad7b18dd436f428 .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/main.o.d 
 	@${RM} ${OBJECTDIR}/main.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  main.c  -o ${OBJECTDIR}/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/main.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/my_timer_lib.o: my_timer_lib.c  .generated_files/flags/default/1baae8b04fc718ef567f52d54ce1788e4ba634aa .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/my_timer_lib.o: my_timer_lib.c  .generated_files/flags/default/8142e1aae7e95656913937c09b2d7acd68497242 .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/my_timer_lib.o.d 
 	@${RM} ${OBJECTDIR}/my_timer_lib.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  my_timer_lib.c  -o ${OBJECTDIR}/my_timer_lib.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/my_timer_lib.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/my_print_lib.o: my_print_lib.c  .generated_files/flags/default/38be3ec4fb5f45714db57b41238d109d2972751c .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/my_print_lib.o: my_print_lib.c  .generated_files/flags/default/92b09940e7df6381c3902102555d77981e92e30d .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/my_print_lib.o.d 
 	@${RM} ${OBJECTDIR}/my_print_lib.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  my_print_lib.c  -o ${OBJECTDIR}/my_print_lib.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/my_print_lib.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/my_circular_buffer_lib.o: my_circular_buffer_lib.c  .generated_files/flags/default/a81029e4fd70ca75dcec0a8fe09be5476f845d0c .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/my_circular_buffer_lib.o: my_circular_buffer_lib.c  .generated_files/flags/default/f2e2d71ca10de65d293ecca289e9f146a7234e0d .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/my_circular_buffer_lib.o.d 
 	@${RM} ${OBJECTDIR}/my_circular_buffer_lib.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  my_circular_buffer_lib.c  -o ${OBJECTDIR}/my_circular_buffer_lib.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/my_circular_buffer_lib.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/parser.o: parser.c  .generated_files/flags/default/c0caac190b5dbcfbeb756d8609720da49962f82c .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/parser.o: parser.c  .generated_files/flags/default/c9c3e0fe1834ccfb0b86450798e499c99bf974c2 .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/parser.o.d 
 	@${RM} ${OBJECTDIR}/parser.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  parser.c  -o ${OBJECTDIR}/parser.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/parser.o.d"      -g -D__DEBUG -D__MPLAB_DEBUGGER_PK3=1    -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
 else
-${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/9913c166916219e1fec2da378e2b044a80e093bf .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/main.o: main.c  .generated_files/flags/default/4017af6326c79d19991973a71810c23046c04ebe .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/main.o.d 
 	@${RM} ${OBJECTDIR}/main.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  main.c  -o ${OBJECTDIR}/main.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/main.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/my_timer_lib.o: my_timer_lib.c  .generated_files/flags/default/63fa35473d9d5a644e2ee5505eb4a0958d10b5aa .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/my_timer_lib.o: my_timer_lib.c  .generated_files/flags/default/660a89cb9e3ae695c31ac0466bcc65974922a40d .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/my_timer_lib.o.d 
 	@${RM} ${OBJECTDIR}/my_timer_lib.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  my_timer_lib.c  -o ${OBJECTDIR}/my_timer_lib.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/my_timer_lib.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/my_print_lib.o: my_print_lib.c  .generated_files/flags/default/fcc8ff911251b52e1a00b171a80b8a377d642bbc .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/my_print_lib.o: my_print_lib.c  .generated_files/flags/default/f9b106c308c73efe5b15b5109b22944becacc952 .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/my_print_lib.o.d 
 	@${RM} ${OBJECTDIR}/my_print_lib.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  my_print_lib.c  -o ${OBJECTDIR}/my_print_lib.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/my_print_lib.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/my_circular_buffer_lib.o: my_circular_buffer_lib.c  .generated_files/flags/default/3e8e55ca4d52e67f4879e296f277c87a455dbb52 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/my_circular_buffer_lib.o: my_circular_buffer_lib.c  .generated_files/flags/default/58a971cd94fe1535036d6f466f029fdf993955de .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/my_circular_buffer_lib.o.d 
 	@${RM} ${OBJECTDIR}/my_circular_buffer_lib.o 
 	${MP_CC} $(MP_EXTRA_CC_PRE)  my_circular_buffer_lib.c  -o ${OBJECTDIR}/my_circular_buffer_lib.o  -c -mcpu=$(MP_PROCESSOR_OPTION)  -MP -MMD -MF "${OBJECTDIR}/my_circular_buffer_lib.o.d"        -g -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -O2 -msmart-io=1 -Wall -msfr-warn=off    -mdfp="${DFP_DIR}/xc16"
 	
-${OBJECTDIR}/parser.o: parser.c  .generated_files/flags/default/804c6f9cefbbea8ba762442ce871f1c76b46adc7 .generated_files/flags/default/da39a3ee5e6b4b0d3255bfef95601890afd80709
+${OBJECTDIR}/parser.o: parser.c  .generated_files/flags/default/85b93d17186bb35f67d3887943d23606204597b9 .generated_files/flags/default/fd67b544a79261c2fe49714d5749bb13d89b49dc
 	@${MKDIR} "${OBJECTDIR}" 
 	@${RM} ${OBJECTDIR}/parser.o.d 
 	@${RM} ${OBJECTDIR}/parser.o 
@@ -175,7 +181,7 @@ else
 ${DISTDIR}/ES_Assignment2.X.${IMAGE_TYPE}.${OUTPUT_SUFFIX}: ${OBJECTFILES}  nbproject/Makefile-${CND_CONF}.mk   
 	@${MKDIR} ${DISTDIR} 
 	${MP_CC} $(MP_EXTRA_LD_PRE)  -o ${DISTDIR}/ES_Assignment2.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX}  ${OBJECTFILES_QUOTED_IF_SPACED}      -mcpu=$(MP_PROCESSOR_OPTION)        -omf=elf -DXPRJ_default=$(CND_CONF)    $(COMPARISON_BUILD)  -Wl,,,--defsym=__MPLAB_BUILD=1,$(MP_LINKER_FILE_OPTION),--stack=16,--check-sections,--data-init,--pack-data,--handles,--isr,--no-gc-sections,--fill-upper=0,--stackguard=16,--no-force-link,--smart-io,-Map="${DISTDIR}/${PROJECTNAME}.${IMAGE_TYPE}.map",--report-mem,--memorysummary,${DISTDIR}/memoryfile.xml$(MP_EXTRA_LD_POST)  -mdfp="${DFP_DIR}/xc16" 
-	${MP_CC_DIR}/xc16-bin2hex ${DISTDIR}/ES_Assignment2.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX} -a  -omf=elf   -mdfp="${DFP_DIR}/xc16" 
+	${MP_CC_DIR}\\xc16-bin2hex ${DISTDIR}/ES_Assignment2.X.${IMAGE_TYPE}.${DEBUGGABLE_SUFFIX} -a  -omf=elf   -mdfp="${DFP_DIR}/xc16" 
 	
 endif
 
@@ -195,7 +201,7 @@ endif
 # Enable dependency checking
 .dep.inc: .depcheck-impl
 
-DEPFILES=$(shell "${PATH_TO_IDE_BIN}"mplabwildcard ${POSSIBLE_DEPFILES})
+DEPFILES=$(shell mplabwildcard ${POSSIBLE_DEPFILES})
 ifneq (${DEPFILES},)
 include ${DEPFILES}
 endif
