@@ -141,7 +141,7 @@ void parse_output(char* msg, mcfbk_data* sdata)
 {
     float amp = sdata->amp / sdata->n;
     float temp = sdata->temp / sdata->n;
-    sprintf(msg,"$MCFBK,%f,%f*", amp,temp);
+    sprintf(msg,"$MCFBK,%.3f,%.1f*", amp,temp);
 }
 
 // This should be called at 200Hz rate
@@ -204,17 +204,14 @@ void feedback_task()
 {
     // Parsing the received data into the UART message
     char out[30];
+    int i = 0;
     parse_output(out, &out_sdata);
     // Resetting the received data
     out_sdata = (mcfbk_data){0};
 
-    if(cb_push_back_string(&out_buffer, out) == -1)
-    {
-        // Waiting for the current LCD transmittion to end and
-        // then writing 3 on the LDC for debugging
-        while (SPI1STATbits.SPITBF == 1);
-        SPI1BUF = '3';
-        return;
+    while (out[i] != '\0'){
+        cb_push_back(&out_buffer, out[i]);
+        i++;
     }
 
     IEC1bits.U2TXIE = 0;
@@ -253,8 +250,10 @@ int main(void) {
     schedInfo[1] = (Heartbeat){0, 200, feedback_task}; // task 2 runs every 200 heartbeat
     schedInfo[2] = (Heartbeat){0, 200, blink_task};    // task 3 runs every 200 heartbeat
     // Init circular buffers to read and write on the UART
-    cb_init(&in_buffer);         // init the circular buffer to read from UART
-    cb_init(&out_buffer);        // init the circular buffer to write on UART
+    char in[28];
+    char out[24];
+    cb_init(&in_buffer, in, 28);     // init the circular buffer to read from UART (24 max character every 5 ms, 28 for safety)
+    cb_init(&out_buffer, out, 24);    // init the circular buffer to write on UART (20 max character, 24 for safety)
     init_uart();                 // init the UART
     init_spi();                  // init the SPI (for debug pourposes, it prints error messages)
     tmr_wait_ms(TIMER1, 1500);   // wait 1.5s to start the SPI correctly

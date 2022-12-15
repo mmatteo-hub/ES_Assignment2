@@ -33,17 +33,18 @@
 
 #include <xc.h> // include processor files - each processor file is guarded.
 
-#define SIZE 30
+#include <stdlib.h>
 
 typedef struct circular_buffer {
-    char container[SIZE]; // the container of the items
+    char* container;      // the container of the items
+    int size;             // the size of the container
     int count;            // number of items in the buffer
     int head;             // index to the first element
     int tail;             // index to the last element
 } circular_buffer;
 
-int cb_length();
-void cb_init(volatile circular_buffer *cb);
+void cb_init(volatile circular_buffer *cb, char *arr, int size);
+void cb_free(volatile circular_buffer *cb);
 int cb_push_back(volatile circular_buffer *cb, char item);
 int cb_push_back_string(volatile circular_buffer *cb, char* string);
 int cb_pop_front(volatile circular_buffer *cb, char* item);
